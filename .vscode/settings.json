@@ -1,0 +1,9 @@
+{
+	"files.associations": {
+		"istream": "cpp",
+		"ostream": "cpp",
+		"ostream_helpers": "cpp",
+		"serstream": "cpp",
+		"streambuf": "cpp"
+	}
+}
