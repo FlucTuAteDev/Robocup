@@ -1,4 +1,9 @@
-#pragma once
+template<typename T>
+T clamp(T value, T min, T max) {
+	return value < min ? min : (value > max ? max : value);
+}
 
-double clamp(double d, double min, double max);
-int sign(int num);
+template<typename T>
+T sign(T num) {
+	return (num > 0) - (num < 0);
+}

@@ -2,10 +2,14 @@
 
 void Bluetooth::add_command(const char *name, BluetoothAction action)
 {
-	if (count == MAX_COUNT)
+	if (command_count == MAX_COMMAND_COUNT)
 		return;
-	commands[count] = name;
-	actions[count++] = action;
+
+	if (strlen(name) > MAX_COMMAND_LENGTH)
+		return;
+
+	commands[command_count] = name;
+	actions[command_count++] = action;
 }
 
 void Bluetooth::poll()
@@ -46,6 +50,8 @@ void Bluetooth::poll()
 			break;
 		}
 
+		if (buffer_index == MAX_COMMAND_LENGTH) return;
+		
 		command_buffer[buffer_index] = current;
 	}
 
@@ -53,7 +59,7 @@ void Bluetooth::poll()
 	Serial.println(number_buffer);
 	// Search for action related to the command
 	BluetoothAction action = nullptr;
-	for (size_t i = 0; i < count; i++)
+	for (size_t i = 0; i < command_count; i++)
 	{
 		if (!strcmp(command_buffer, commands[i]))
 		{
