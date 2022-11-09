@@ -1,12 +1,12 @@
-#include "Arduino.h"
+#pragma once
 
 class KalmanFilter
 {
     public:
 
 	KalmanFilter(double angle = 0.001, double bias = 0.003, double measure = 0.03);
-	double update(double newValue, double newRate);
-	double getRate() { return K_rate; }
+	double update(double new_value, double new_rate);
+	double get_rate() { return K_rate; }
 
     private:
 

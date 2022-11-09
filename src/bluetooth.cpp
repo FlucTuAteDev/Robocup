@@ -1,4 +1,6 @@
-#include <bluetooth.h>
+#include <Bluetooth.h>
+
+#include <Arduino.h>
 
 void Bluetooth::add_command(const char *name, BluetoothAction action)
 {
@@ -18,7 +20,7 @@ void Bluetooth::poll()
 		return;
 
 	// Wait for the entire command to get through (9600 bps baud rate => 1.2 char / ms)
-	delay(10);
+	delay(20);
 	double number = 0;
 	for (size_t buffer_index = 0; Serial.available(); buffer_index++)
 	{
@@ -54,9 +56,7 @@ void Bluetooth::poll()
 		
 		command_buffer[buffer_index] = current;
 	}
-
-	Serial.println(command_buffer);
-	Serial.println(number_buffer);
+	
 	// Search for action related to the command
 	BluetoothAction action = nullptr;
 	for (size_t i = 0; i < command_count; i++)
@@ -73,4 +73,5 @@ void Bluetooth::poll()
 	}
 	
 	action(number);
+	Serial.println("OK");
 }

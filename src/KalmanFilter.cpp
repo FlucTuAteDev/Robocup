@@ -1,5 +1,7 @@
 #include "KalmanFilter.h"
 
+#include <Arduino.h>
+
 KalmanFilter::KalmanFilter(double angle, double bias, double measure)
 {
     Q_angle = angle;
@@ -8,6 +10,7 @@ KalmanFilter::KalmanFilter(double angle, double bias, double measure)
 
     K_angle = 0;
     K_bias = 0;
+	K_rate = 0;
 
     P[0][0] = 1;
     P[0][1] = 0;

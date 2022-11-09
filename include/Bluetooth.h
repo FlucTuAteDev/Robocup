@@ -1,5 +1,4 @@
 #pragma once
-#include <Arduino.h>
 
 using BluetoothAction = void(*)(float);
 
@@ -15,5 +14,6 @@ public:
 	Bluetooth() {}
 
 	void add_command(const char* name, BluetoothAction action);
+	// Default command for assigning variable;
 	void poll();
 };
