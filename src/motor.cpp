@@ -11,11 +11,11 @@ void Motor::setup()
 }
 
 void Motor::set_target(int16_t speed) {
-	this->target_speed = clamp(speed, -MotorController::max_motor_speed, MotorController::max_motor_speed);
+	this->target_speed = constrain(speed, -MotorController::max_motor_speed, MotorController::max_motor_speed);
 }
 
 void Motor::turn(int16_t speed) {
-	this->speed = clamp(speed, -MotorController::max_motor_speed, MotorController::max_motor_speed);
+	this->speed = constrain(speed, -MotorController::max_motor_speed, MotorController::max_motor_speed);
 
 	digitalWrite(forward_pin, this->speed > 0);
 	digitalWrite(backward_pin, this->speed < 0);
