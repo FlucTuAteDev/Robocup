@@ -26,9 +26,9 @@ void MotorController::go(int16_t target, float diff)
 	// left.turn(left_speed);
 }
 
-void MotorController::update_rotation_counts() {
-	right.update_rotation_count();
-	left.update_rotation_count();
+void MotorController::go_pwm(int16_t left_pwm, int16_t right_pwm) {
+	left.set_target(left_pwm);
+	right.set_target(right_pwm);
 }
 
 void MotorController::update_motor_speeds() {

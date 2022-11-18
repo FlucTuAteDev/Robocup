@@ -15,8 +15,9 @@ public:
 	void setup();
 	// Speed should be between -255 and 255
 	void set_target(int16_t speed);
-	void update_rotation_count();
 	void update_motor_speed();
+	
+	void hall_interrupt();
 	void reset_hall();
 private:
 	void turn(int16_t speed);

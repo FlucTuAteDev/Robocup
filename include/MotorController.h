@@ -15,8 +15,9 @@ public:
 
 	void setup();
 
+	// void go(int16_t speed, Direction direction);
 	void go(int16_t speed, float diff);
-	void update_rotation_counts();
+	void go_pwm(int16_t pwm_left, int16_t pwm_right);
 	void update_motor_speeds();
 	void reset_halls();
 

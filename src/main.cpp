@@ -25,35 +25,36 @@ float norm_gyro_x, norm_gyro_z;
 KalmanFilter kalman(0.001, 0.003, 0.5);
 
 float tilt_angle;
-float yaw_angle = 0;
 float angle_speed;
 
-double kp = 30, ki = 0.2, kd = 0.5;
+double kp = 34, ki = 0, kd = 0.62;
 double kp_speed = 3.8, ki_speed = 0.34, kd_speed = 2.5;
+double kp_turn = 24, kd_turn = 0.08;
 double balance_position = 0;
 int PD_pwm;
-float pwm1 = 0, pwm2 = 0;
 
 float speeds_filterold = 0;
 float positions = 0;
 double PI_pwm;
 float speeds_filter;
 
+int left = 0, right = 0, turnout = 0;
+
 int pulseright = 0, pulseleft = 0;
-int cumpulseright = 0, cumpulseleft = 0;
+long cumpulseright = 0, cumpulseleft = 0;
 int16_t turn_speed = 50;
 uint8_t turn_time = 20;
 
 float Turn_pwm = 0;
 float pos_constrain = 600;
-float adjust_motor = -500;
+float adjust_motor = -50;
 
 Bluetooth bt;
 
 void countpulse();
 void angle_calculate();
-void PD();
-void speedpiout();
+void tilt_control();
+void position_control();
 void anglePWM();
 void DSzhongduan();
 
@@ -110,7 +111,6 @@ void setup()
 					   {
 		Serial.println((String)"p: " + kp + "; i: " + ki + "; d: " + kd);
 		Serial.println((String)"Speed p: " + kp_speed + "; i: " + ki_speed + "; d: " + kd_speed);
-		Serial.println((String)"Yaw angle: " + yaw_angle);
 		Serial.println((String)"Balance angle: " + balance_angle);
 		Serial.println((String)"Pulse left: " + cumpulseleft + "; right: " + cumpulseright);
 		// Serial.println((String)"Positions: " + positions);
@@ -128,7 +128,6 @@ void setup()
 		bt.add_command("posc", [](float num) { pos_constrain = num; });
 		bt.add_command("motora", [](float num) { adjust_motor = num; });
 		bt.add_command("pulser", [](float num) { cumpulseright += num; });
-		bt.add_command("turns", [](float num) { turn_speed = num; });
 		bt.add_command("turns", [](float num) { turn_speed = num; });
 		bt.add_command("turnt", [](float num) { turn_time = num; });
 	}
@@ -164,7 +163,7 @@ void DSzhongduan()
 
 	countpluse();
 	angle_calculate();
-	PD();
+	tilt_control();
 	anglePWM();
 
 	// Run PI every PI_TIME milliseconds
@@ -173,11 +172,11 @@ void DSzhongduan()
 	#define PI_TIME 40
 	if (pi_timer >= PI_TIME)
 	{
-		speedpiout();
+		position_control();
 		pi_timer = 0;
 	}
 
-	static uint16_t turn_timer = DTms * 2; // Offset turn timer from PI timer
+	static uint16_t turn_timer = 0; // Offset turn timer from PI timer
 	turn_timer += DTms;
 	#define TURN_TIME 20
 	if (turn_timer >= turn_time) {
@@ -198,14 +197,14 @@ void angle_calculate()
 	norm_gyro_z = -gz / 131;
 }
 
-void PD()
+void tilt_control()
 {
 	PD_pwm = kp * (tilt_angle - balance_angle) + kd * kalman.get_rate();
 }
 
-void speedpiout()
+void position_control()
 {
-	// Negative: adjust in the opposite directiond
+	// Negative: adjust in the opposite direction
 	float speeds = -(pulseleft + pulseright) * 1.0;
 	pulseleft = pulseright = 0;
 	float pd_tag = speeds_filterold;
@@ -220,14 +219,18 @@ void speedpiout()
 
 void anglePWM()
 {
-	float target = PD_pwm + PI_pwm; // * 1.2;
+	float right_target = PD_pwm + PI_pwm - Turn_pwm;
+	float left_target = PD_pwm + PI_pwm + Turn_pwm;
+	// float target = PD_pwm + PI_pwm; // * 1.2;
 
 	// Stop the motors over a certain angle
 	if (abs(tilt_angle) > 75)
-		target = 0;
+		left_target = right_target = 0;
 
 	// Equalize left and right motor pulses
-	float diff = (cumpulseright - cumpulseleft) / adjust_motor * sign(mc.right.speed);
-	
-	mc.go(target, constrain(diff, -0.2, 0.2));
+	float diff = (cumpulseright - cumpulseleft) / adjust_motor;
+	diff = constrain(diff, -50, 50);
+	// mc.go(target, constrain(diff, -0.2, 0.2));
+
+	mc.go_pwm(left_target + diff, right_target - diff);
 }

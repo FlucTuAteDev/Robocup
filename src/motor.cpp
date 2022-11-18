@@ -23,13 +23,6 @@ void Motor::turn(int16_t speed) {
 	analogWrite(speed_pin, abs(this->speed));
 }
 
-void Motor::update_rotation_count() {
-	uint8_t curr_hall_state = digitalRead(hall_pin);
-	// If there is a pulse take away or add 1 to the pulse count depending on the direction
-	hall_pulse_count += (prev_hall_state != curr_hall_state) * sign(speed);
-	prev_hall_state = curr_hall_state;
-}
-
 void Motor::update_motor_speed() {
 	int16_t diff = target_speed - speed;
 	// bool dir_change = sign(target_speed) + sign(speed) == 0;
