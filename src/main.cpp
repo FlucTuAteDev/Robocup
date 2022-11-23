@@ -47,13 +47,14 @@ int16_t turn_speed = 50;
 uint8_t turn_time = 20;
 
 float Turn_pwm = 0;
-float pos_constrain = 600;
+float pos_constrain = 1000;
 float adjust_motor = -500;
 
 Bluetooth bt;
 
 float* MovePhase::position = &positions;
 float* TurnPhase::position = &positions;
+float* StopPhase::position = &positions;
 long* TurnPhase::left_cum_pulse = &cumpulseleft;
 long* TurnPhase::right_cum_pulse = &cumpulseright;
 
@@ -71,10 +72,16 @@ long* TurnPhase::right_cum_pulse = &cumpulseright;
 
 Phase* phases[] = {
 	new WaitPhase(2),
-	new TurnPhase(90),
-	// new TurnPhase(-4562, -4562),
-	// new TurnPhase(3320, 3320),
+	// new MovePhase(30),
 	// new MovePhase(10),
+
+	new TurnPhase(45),
+	new TurnPhase(-270),
+	new TurnPhase(45),
+	// new MovePhase(10),
+	new StopPhase(),
+	new WaitPhase(100),
+	// new MovePhase(30),
 };
 #define PHASE_COUNT (sizeof(phases) / sizeof(phases[0]))
 size_t curr_phase_index = 0;

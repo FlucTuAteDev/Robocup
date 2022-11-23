@@ -45,3 +45,11 @@ public:
 	void start() override;
 	bool is_finished() override;
 };
+
+class StopPhase : public Phase {
+public:	
+	StopPhase();
+	void start() override;
+	bool is_finished() override;
+	static float* position;
+};

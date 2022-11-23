@@ -20,7 +20,7 @@ bool WaitPhase::is_finished()
 
 #define BALANCE_POS 100
 #define PPR 66
-#define ROBOT_RADIUS 11.6
+#define ROBOT_DIAMETER 23.5
 
 MovePhase::MovePhase(int cm) : distance(cm) {}
 void MovePhase::start()
@@ -35,11 +35,23 @@ bool MovePhase::is_finished()
 TurnPhase::TurnPhase(float angle) : angle(angle) {}
 void TurnPhase::start()
 {
-	float outer_circumference = angle / 360 * (8 * ROBOT_RADIUS * PI * PPR) ;
-	*position += outer_circumference;
+	float outer_circumference = angle / 360 * (4 * ROBOT_DIAMETER * PI * PPR) ;
+	*position += abs(outer_circumference);
 	*right_cum_pulse += outer_circumference;
 }
 bool TurnPhase::is_finished()
 {
 	return abs(*left_cum_pulse - *right_cum_pulse) <= 200;
+}
+
+StopPhase::StopPhase(){}
+void StopPhase::start()
+{
+	Serial.println((String)"Positions: " + *position);
+	*position = BALANCE_POS;
+	Serial.println((String)"Positions: " + *position);
+}
+bool StopPhase::is_finished()
+{
+	return true;
 }
