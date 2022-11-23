@@ -13,9 +13,9 @@ public:
 class WaitPhase : public Phase {
 private:
 	long start_time;
-	size_t delay;
+	float delay;
 public:
-	WaitPhase(size_t delay);
+	WaitPhase(float delay);
 	void start() override;
 	bool is_finished() override;
 };

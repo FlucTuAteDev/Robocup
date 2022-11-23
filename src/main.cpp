@@ -47,7 +47,7 @@ int16_t turn_speed = 50;
 uint8_t turn_time = 20;
 
 float Turn_pwm = 0;
-float pos_constrain = 1000;
+float pos_constrain = 850;
 float adjust_motor = -500;
 
 Bluetooth bt;
@@ -69,17 +69,21 @@ long* TurnPhase::right_cum_pulse = &cumpulseright;
 // 	new WaitPhase(5),
 // 	new MovePhase(-10),
 // };
-
+const int obstacleDistance = 85;
 Phase* phases[] = {
 	new WaitPhase(2),
-	// new MovePhase(30),
-	// new MovePhase(10),
+	// new TurnPhase(90),
+	new MovePhase(obstacleDistance - 65),
+
+	// new WaitPhase(1.5),
 
 	new TurnPhase(45),
 	new TurnPhase(-270),
 	new TurnPhase(45),
-	// new MovePhase(10),
+
 	new StopPhase(),
+	new MovePhase(obstacleDistance - 60),
+
 	new WaitPhase(100),
 	// new MovePhase(30),
 };
@@ -281,7 +285,7 @@ void anglePWM()
 	float target = PD_pwm + PI_pwm; // * 1.2;
 
 	// Stop the motors over a certain angle
-	if (abs(tilt_angle) > 75)
+	if (abs(tilt_angle) > 60)
 		target = 0;
 		// left_target = right_target = 0;
 

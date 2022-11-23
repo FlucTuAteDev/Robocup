@@ -1,6 +1,6 @@
 #include "Phase.h"
 
-WaitPhase::WaitPhase(size_t sec) : delay(sec * 1000) {}
+WaitPhase::WaitPhase(float sec) : delay(sec * 1000) {}
 void WaitPhase::start()
 {
 	start_time = millis();
