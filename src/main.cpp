@@ -56,13 +56,25 @@ float* MovePhase::position = &positions;
 float* TurnPhase::position = &positions;
 long* TurnPhase::left_cum_pulse = &cumpulseleft;
 long* TurnPhase::right_cum_pulse = &cumpulseright;
+
+//1. feladat
+// Phase* phases[] = {
+// 	new WaitPhase(5),
+// 	new MovePhase(10),
+// 	new WaitPhase(5),
+// 	new MovePhase(-10),
+// 	new WaitPhase(5),
+// 	new MovePhase(10),
+// 	new WaitPhase(5),
+// 	new MovePhase(-10),
+// };
+
 Phase* phases[] = {
-	new MovePhase(6600),
-	new TurnPhase(4500, 4500),
-	new MovePhase(660),
-	new TurnPhase(-5000, -5000),
-	// new TurnPhase(2320, 2320),
+	new WaitPhase(2),
+	new TurnPhase(90),
+	// new TurnPhase(-4562, -4562),
 	// new TurnPhase(3320, 3320),
+	// new MovePhase(10),
 };
 #define PHASE_COUNT (sizeof(phases) / sizeof(phases[0]))
 size_t curr_phase_index = 0;
@@ -239,17 +251,20 @@ void tilt_control()
 
 void position_control()
 {
+	// static float speed;
+	// const float max_acceleration = 100;
 	// Negative: adjust in the opposite direction
 	float speeds = -(pulseleft + pulseright) * 1.0;
 	pulseleft = pulseright = 0;
-	float pd_tag = speeds_filterold;
-	speeds_filterold *= 0.7; // first-order complementary filtering
-	speeds_filter = speeds_filterold + speeds * 0.3;
-	speeds_filterold = speeds_filter;
+	float pd_tag = speeds_filter;
+
+	speeds_filter = speeds_filter * 0.7 + speeds * 0.3;
 	positions += speeds_filter;
 	// positions = constrain(positions, -4000, 4000);
 	float constrained_pos = constrain(positions, -pos_constrain, pos_constrain);
-	PI_pwm = ki_speed * (balance_position - constrained_pos) + kp_speed * (balance_position - speeds_filter) + kd_speed * (balance_position - (speeds_filter - pd_tag));
+	PI_pwm = ki_speed * (balance_position - constrained_pos) 
+		+ kp_speed * (balance_position - speeds_filter)
+		+ kd_speed * (balance_position - (speeds_filter - pd_tag));
 }
 
 void anglePWM()
@@ -271,5 +286,5 @@ void anglePWM()
 
 	float diff = (cumpulseright - cumpulseleft) / adjust_motor * sign(mc.right.speed);
 	
-	mc.go(target, constrain(diff, -0.2, 0.2));
+	mc.go(target, constrain(diff, -0.25, 0.25));
 }

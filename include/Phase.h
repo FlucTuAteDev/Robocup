@@ -33,13 +33,15 @@ public:
 
 class TurnPhase : public Phase {
 private:
-	float forward_speed;
+	// float forward_speed;
 	float angle;
 public:
 	static float* position;
 	static long* right_cum_pulse, *left_cum_pulse;
 
-	TurnPhase(float forward_speed, long angle);
+	// TurnPhase(float forward_speed, long angle);
+	TurnPhase(float angle);
+
 	void start() override;
 	bool is_finished() override;
 };
