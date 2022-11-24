@@ -10,9 +10,9 @@ class KalmanFilter
 
     private:
 
+	double S, angle_err;
 	double Q_angle, Q_bias, R_measure;
 	double K_angle, K_bias, K_rate;
 	double P[2][2], K[2];
-	double S, angle_err;
 	double dt, kt;
 };

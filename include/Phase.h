@@ -23,10 +23,11 @@ public:
 class MovePhase : public Phase {
 private:
 	int distance;
+	bool reset;
 public:
 	static float* position;
 	
-	MovePhase(int distance);
+	MovePhase(int distance, bool reset = false);
 	void start() override;
 	bool is_finished() override;
 };

@@ -4,20 +4,20 @@
 
 KalmanFilter::KalmanFilter(double angle, double bias, double measure)
 {
-    Q_angle = angle;
-    Q_bias = bias;
-    R_measure = measure;
+	Q_angle = angle;
+	Q_bias = bias;
+	R_measure = measure;
 
-    K_angle = 0;
-    K_bias = 0;
+	K_angle = 0;
+	K_bias = 0;
 	K_rate = 0;
 
-    P[0][0] = 1;
-    P[0][1] = 0;
-    P[1][0] = 0;
-    P[1][1] = 1;
+	P[0][0] = 1;
+	P[0][1] = 0;
+	P[1][0] = 0;
+	P[1][1] = 1;
 
-    kt = (double)micros();
+	kt = (double)micros();
 }
 
 double KalmanFilter::update(double newValue, double newRate)
@@ -33,14 +33,19 @@ double KalmanFilter::update(double newValue, double newRate)
 	P[1][1] += Q_bias * dt;
 
 	S = R_measure + P[0][0];
-	
+	if (S == 0)
+	{
+		Serial.println("S == 0");
+		return K_angle;
+	}
+
 	K[0] = P[0][0] / S;
 	K[1] = P[1][0] / S;
 
 	P[0][0] -= K[0] * P[0][0];
-    P[0][1] -= K[0] * P[0][1];
-    P[1][0] -= K[1] * P[0][0];
-    P[1][1] -= K[1] * P[0][1];
+	P[0][1] -= K[0] * P[0][1];
+	P[1][0] -= K[1] * P[0][0];
+	P[1][1] -= K[1] * P[0][1];
 
 	K_bias += K[1] * angle_err;
 	K_rate = newRate - K_bias;

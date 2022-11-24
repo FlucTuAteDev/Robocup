@@ -1,7 +1,7 @@
 #include "MotorController.h"
 #include "utils.h"
 
-#define MAX_MOTOR_SPEED 150
+#define MAX_MOTOR_SPEED 200
 #define MAX_CHANGE 30
 
 int16_t MotorController::max_motor_speed = MAX_MOTOR_SPEED;

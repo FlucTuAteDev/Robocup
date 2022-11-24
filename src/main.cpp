@@ -47,7 +47,7 @@ int16_t turn_speed = 50;
 uint8_t turn_time = 20;
 
 float Turn_pwm = 0;
-float pos_constrain = 850;
+float pos_constrain = 900;
 float adjust_motor = -500;
 
 Bluetooth bt;
@@ -69,20 +69,20 @@ long* TurnPhase::right_cum_pulse = &cumpulseright;
 // 	new WaitPhase(5),
 // 	new MovePhase(-10),
 // };
-const int obstacleDistance = 85;
+const int obstacleDistance = 190;
+const int avoidance_radius = 50;
 Phase* phases[] = {
 	new WaitPhase(2),
 	// new TurnPhase(90),
-	new MovePhase(obstacleDistance - 65),
+	new MovePhase(obstacleDistance - avoidance_radius),
 
 	// new WaitPhase(1.5),
 
-	new TurnPhase(45),
-	new TurnPhase(-270),
-	new TurnPhase(45),
+	new TurnPhase(50),
+	new TurnPhase(-280),
+	new TurnPhase(50),
 
-	new StopPhase(),
-	new MovePhase(obstacleDistance - 60),
+	new MovePhase(obstacleDistance - avoidance_radius, true),
 
 	new WaitPhase(100),
 	// new MovePhase(30),
@@ -295,7 +295,7 @@ void anglePWM()
 
 	// mc.go_pwm(left_target + diff, right_target - diff);
 
-	float diff = (cumpulseright - cumpulseleft) / adjust_motor * sign(mc.right.speed);
+	float diff = ((cumpulseright - cumpulseleft) / adjust_motor) * sign(mc.right.speed);
 	
-	mc.go(target, constrain(diff, -0.25, 0.25));
+	mc.go(target, constrain(diff, -0.3, 0.3));
 }

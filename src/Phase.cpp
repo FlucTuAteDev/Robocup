@@ -21,15 +21,17 @@ bool WaitPhase::is_finished()
 #define BALANCE_POS 100
 #define PPR 66
 #define ROBOT_DIAMETER 23.5
+#define DONE_THRESHOLD 200
 
-MovePhase::MovePhase(int cm) : distance(cm) {}
+MovePhase::MovePhase(int cm, bool reset) : distance(cm), reset(reset) {}
 void MovePhase::start()
 {
+	if(reset) *position = BALANCE_POS;
 	*position += distance * PPR;
 }
 bool MovePhase::is_finished()
 {
-	return abs(*position - BALANCE_POS) < abs(distance * PPR / 15);
+	return abs(*position - BALANCE_POS) < DONE_THRESHOLD; //abs(distance * PPR / 15);
 }
 
 TurnPhase::TurnPhase(float angle) : angle(angle) {}
