@@ -69,9 +69,10 @@ long* TurnPhase::right_cum_pulse = &cumpulseright;
 // 	new WaitPhase(5),
 // 	new MovePhase(-10),
 // };
-const int obstacleDistance = 190;
-const int avoidance_radius = 60;
-const int turn_sharpness = 55;
+const int obstacleDistance = 150;
+const int avoidance_radius = 50;
+const int turn_sharpness = 50;
+const float max_diff = 0.3;
 
 Phase* phases[] = {
 	new WaitPhase(2),
@@ -299,5 +300,5 @@ void anglePWM()
 
 	float diff = ((cumpulseright - cumpulseleft) / adjust_motor) * sign(mc.right.speed);
 	
-	mc.go(target, constrain(diff, -0.25, 0.25));
+	mc.go(target, constrain(diff, -max_diff, max_diff));
 }
