@@ -47,7 +47,7 @@ int16_t turn_speed = 50;
 uint8_t turn_time = 20;
 
 float Turn_pwm = 0;
-float pos_constrain = 1050;
+float pos_constrain = 950;
 float adjust_motor = -500;
 
 Bluetooth bt;
@@ -69,8 +69,8 @@ long* TurnPhase::right_cum_pulse = &cumpulseright;
 // 	new WaitPhase(5),
 // 	new MovePhase(-10),
 // };
-const int obstacleDistance = 150;
-const int avoidance_radius = 50;
+const int obstacleDistance = 170;
+const int avoidance_radius = 60;
 const int turn_sharpness = 50;
 const float max_diff = 0.3;
 
