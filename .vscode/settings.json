@@ -4,6 +4,8 @@
 		"ostream": "cpp",
 		"ostream_helpers": "cpp",
 		"serstream": "cpp",
-		"streambuf": "cpp"
+		"streambuf": "cpp",
+		"ios": "cpp",
+		"list": "cpp"
 	}
 }

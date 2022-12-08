@@ -13,6 +13,7 @@ class Bluetooth {
 public:
 	Bluetooth() {}
 
+	void setup_commands();
 	void add_command(const char* name, BluetoothAction action);
 	// Default command for assigning variable;
 	void poll();

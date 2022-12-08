@@ -1,6 +1,41 @@
+#include "variables.h"
 #include <Bluetooth.h>
-
 #include <Arduino.h>
+
+void Bluetooth::setup_commands() {
+	using namespace variables;
+	add_command("motormax", [](float num) { MotorController::max_motor_speed = num; });
+	add_command("motorch", [](float num) { MotorController::max_change = num; });
+	add_command("i", [](float num) { i = num; });
+	add_command("p", [](float num) { p = num; });
+	add_command("d", [](float num) { d = num; });
+	add_command("si", [](float num) { i_speed = num; });
+	add_command("sp", [](float num) { p_speed = num; });
+	add_command("sd", [](float num) { d_speed = num; });
+	add_command("start", [](float num) { mc.start(); sampling = false; });
+	add_command("stop", [](float num) { mc.stop(); reset(); });
+	add_command("reset", [](float num) { reset(); });
+	add_command("status", [](float num) {
+		Serial.println((String)"p: " + p + "; i: " + i + "; d: " + d);
+		Serial.println((String)"Speed p: " + p_speed + "; i: " + i_speed + "; d: " + d_speed);
+		Serial.println((String)"Balance angle: " + balance_angle);
+		Serial.println((String)"Pulse left: " + cumpulseleft + "; right: " + cumpulseright);
+		Serial.println((String)"Positions: " + positions);
+		// Serial.println((String)"Speeds filter: " + speeds_filter + "; filterold: " + speeds_filterold);
+		Serial.println((String)"PD_pwm: " + PD_pwm); 
+		Serial.println((String)"Current phase index: " + curr_phase_index);
+	});
+	add_command("sample", [](float num) {
+		mc.stop();
+		sampling = true;
+		// Start sampling around the angle at which the command is issued
+		balance_angle = tilt_angle; 
+	});
+	add_command("sample_stop", [](float num) { sampling = false; });
+	add_command("pos", [](float num) { positions += num; });
+	add_command("posc", [](float num) { pos_constrain = num; });
+	add_command("pulser", [](float num) { cumpulseright += num; });
+}
 
 void Bluetooth::add_command(const char *name, BluetoothAction action)
 {

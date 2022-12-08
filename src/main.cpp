@@ -1,98 +1,10 @@
 #include <MsTimer2.h>
 #include <PinChangeInterrupt.h>
-#include <MPU6050.h>
 #include <Wire.h>
-
-#include "KalmanFilter.h"
 #include "utils.h"
-#include "Bluetooth.h"
-#include "MotorController.h"
-#include "Phase.h"
 
-#define DTms 5
-#define DTs (DTms / 1000.0)
-
-MPU6050 mpu;
-// Accelerometer and gyroscope raw measurmentsa
-int16_t ax, ay, az, gx, gy, gz;
-
-MotorController mc;
-const int btn = 13;
-
-float balance_angle = 0;
-bool sampling = false;
-float norm_gyro_x, norm_gyro_z;
-
-KalmanFilter kalman(0.001, 0.003, 0.5);
-
-float tilt_angle;
-float angle_speed;
-
-double kp = 34, ki = 0, kd = 0.62;
-double kp_speed = 3.8, ki_speed = 0.34, kd_speed = 2.5;
-double kp_turn = 24, kd_turn = 0.08;
-double balance_position = 0;
-int PD_pwm;
-
-float speeds_filterold = 0;
-float positions = 0;
-double PI_pwm;
-float speeds_filter;
-
-int left = 0, right = 0, turnout = 0;
-
-int pulseright = 0, pulseleft = 0;
-long cumpulseright = 0, cumpulseleft = 0;
-int16_t turn_speed = 50;
-uint8_t turn_time = 20;
-
-float Turn_pwm = 0;
-float pos_constrain = 950;
-float adjust_motor = -500;
-
-Bluetooth bt;
-
-float* MovePhase::position = &positions;
-float* TurnPhase::position = &positions;
-float* StopPhase::position = &positions;
-long* TurnPhase::left_cum_pulse = &cumpulseleft;
-long* TurnPhase::right_cum_pulse = &cumpulseright;
-
-//1. feladat
-// Phase* phases[] = {
-// 	new WaitPhase(5),
-// 	new MovePhase(10),
-// 	new WaitPhase(5),
-// 	new MovePhase(-10),
-// 	new WaitPhase(5),
-// 	new MovePhase(10),
-// 	new WaitPhase(5),
-// 	new MovePhase(-10),
-// };
-const int obstacleDistance = 170;
-const int avoidance_radius = 60;
-const int turn_sharpness = 50;
-const float max_diff = 0.3;
-
-Phase* phases[] = {
-	new WaitPhase(2),
-	// new TurnPhase(90),
-	new MovePhase(obstacleDistance - avoidance_radius),
-
-	// new WaitPhase(1.5),
-
-	new TurnPhase(turn_sharpness),
-	new TurnPhase(- 2 * turn_sharpness - 180),
-	new TurnPhase(turn_sharpness),
-
-	new MovePhase(obstacleDistance - avoidance_radius, true),
-
-	new WaitPhase(100),
-	// new MovePhase(30),
-};
-#define PHASE_COUNT (sizeof(phases) / sizeof(phases[0]))
-size_t curr_phase_index = 0;
-Phase* curr_phase = phases[0];
+#include "variables.h"
+using namespace variables;
 
 void countpulse();
 void angle_calculate();
@@ -101,17 +13,10 @@ void position_control();
 void anglePWM();
 void DSzhongduan();
 
-void reset() {
-	positions = 0;
-	cumpulseleft = 0; cumpulseright = 0;
-	curr_phase_index = 0;
-	curr_phase = phases[0];
-	for (size_t i = 0; i < PHASE_COUNT; i++) phases[i]->is_started = false;
-}
-
 void setup()
 {
 	mc.setup();
+	bt.setup_commands();
 
 	pinMode(btn, INPUT);
 
@@ -137,42 +42,6 @@ void setup()
 		digitalPinToPCINT(mc.right.hall_pin), []()
 		{ mc.right.hall_pulse_count++; },
 		CHANGE);
-
-	// Bluetooth commands
-	{
-		bt.add_command("motormax", [](float num) { MotorController::max_motor_speed = num; });
-		bt.add_command("motorch", [](float num) { MotorController::max_change = num; });
-		bt.add_command("i", [](float num) { ki = num; });
-		bt.add_command("p", [](float num) { kp = num; });
-		bt.add_command("d", [](float num) { kd = num; });
-		bt.add_command("angle", [](float num) { balance_angle = num; });
-		bt.add_command("start", [](float num) { mc.start(); sampling = false; });
-		bt.add_command("stop", [](float num) { mc.stop(); reset(); });
-		bt.add_command("reset", [](float num) { reset(); });
-		bt.add_command("status", [](float num) {
-			Serial.println((String)"p: " + kp + "; i: " + ki + "; d: " + kd);
-			Serial.println((String)"Speed p: " + kp_speed + "; i: " + ki_speed + "; d: " + kd_speed);
-			Serial.println((String)"Balance angle: " + balance_angle);
-			Serial.println((String)"Pulse left: " + cumpulseleft + "; right: " + cumpulseright);
-			Serial.println((String)"Positions: " + positions);
-			// Serial.println((String)"Speeds filter: " + speeds_filter + "; filterold: " + speeds_filterold);
-			Serial.println((String)"PD_pwm: " + PD_pwm); 
-			Serial.println((String)"Current phase index: " + curr_phase_index);
-		});
-		bt.add_command("sample", [](float num) {
-			mc.stop();
-			sampling = true;
-			// Start sampling around the angle at which the command is issued
-			balance_angle = tilt_angle; 
-		});
-		bt.add_command("sample_stop", [](float num) { sampling = false; });
-		bt.add_command("pos", [](float num) { positions += num; });
-		bt.add_command("posc", [](float num) { pos_constrain = num; });
-		bt.add_command("motora", [](float num) { adjust_motor = num; });
-		bt.add_command("pulser", [](float num) { cumpulseright += num; });
-		bt.add_command("turns", [](float num) { turn_speed = num; });
-		bt.add_command("turnt", [](float num) { turn_time = num; });
-	}
 }
 
 void loop()
@@ -197,7 +66,7 @@ void loop()
 		Serial.println("Phase finished");
 
 		// Only start next phase if there is one
-		if (curr_phase_index + 1 < PHASE_COUNT) {
+		if (curr_phase_index + 1 < phase_count) {
 			curr_phase->is_started = false;
 			curr_phase = phases[++curr_phase_index];
 		}
@@ -237,14 +106,6 @@ void DSzhongduan()
 		pi_timer = 0;
 	}
 
-	static uint16_t turn_timer = 0; // Offset turn timer from PI timer
-	turn_timer += DTms;
-	#define TURN_TIME 20
-	if (turn_timer >= turn_time) {
-		// mc.go(turn_speed, 1);
-		turn_timer = 0;
-	}
-
 	mc.update_motor_speeds();
 }
 
@@ -260,7 +121,7 @@ void angle_calculate()
 
 void tilt_control()
 {
-	PD_pwm = kp * (tilt_angle - balance_angle) + kd * kalman.get_rate();
+	PD_pwm = p * (tilt_angle - balance_angle) + d * kalman.get_rate();
 }
 
 void position_control()
@@ -276,9 +137,9 @@ void position_control()
 	positions += speeds_filter;
 	// positions = constrain(positions, -4000, 4000);
 	float constrained_pos = constrain(positions, -pos_constrain, pos_constrain);
-	PI_pwm = ki_speed * (balance_position - constrained_pos) 
-		+ kp_speed * (balance_position - speeds_filter)
-		+ kd_speed * (balance_position - (speeds_filter - pd_tag));
+	PI_pwm = i_speed * (balance_position - constrained_pos) 
+		+ p_speed * (balance_position - speeds_filter)
+		+ d_speed * (balance_position - (speeds_filter - pd_tag));
 }
 
 void anglePWM()
@@ -288,7 +149,7 @@ void anglePWM()
 	float target = PD_pwm + PI_pwm; // * 1.2;
 
 	// Stop the motors over a certain angle
-	if (abs(tilt_angle) > 60)
+	if (abs(tilt_angle) > 70)
 		target = 0;
 		// left_target = right_target = 0;
 
